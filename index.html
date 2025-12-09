@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Presensi GPS Mahasiswa</title>
+  <title>Presensi GPS Mahasiswa - Universitas Negeri Malang</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { box-sizing: border-box; }
@@ -14,24 +14,23 @@
     .table-row { transition: background-color 0.2s ease; }
     .table-row:hover { background-color: #f8fafc; }
     .status-badge { animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
-    .loading-spinner { border:3px solid #f3f4f6; border-top:3px solid #667eea; border-radius:50%; width:24px; height:24px; animation:spin 1s linear infinite; }
-    @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-10px);} to {opacity:1; transform:translateY(0);} }
+    .loading-spinner { border:3px solid #f3f4f6; border-top:3px solid #667eea; border-radius:50%; width:24px; height:24px; animation: spin 1s linear infinite;}
+    @keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="h-full bg-gray-50">
 <div class="w-full h-full overflow-auto">
-
   <!-- Header -->
   <div class="gradient-bg text-white py-8 px-4">
     <div class="max-w-6xl mx-auto">
-      <h1 class="text-4xl font-bold mb-2">Presensi GPS Mahasiswa</h1>
-      <p class="text-xl opacity-90">Universitas Negeri Malang</p>
+      <h1 id="judul-halaman" class="text-4xl font-bold mb-2">Presensi GPS Mahasiswa</h1>
+      <p id="nama-universitas" class="text-xl opacity-90">Universitas Negeri Malang</p>
     </div>
   </div>
 
   <div class="max-w-6xl mx-auto px-4 py-8">
-    <!-- Form Presensi -->
+    <!-- Form Presensi Card -->
     <div class="bg-white rounded-2xl card-shadow p-8 mb-8">
       <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Form Presensi</h2>
       <form id="presensi-form" class="space-y-6">
@@ -47,15 +46,11 @@
           <label for="kelas" class="block text-sm font-semibold text-gray-700 mb-2">Kelas</label>
           <input type="text" id="kelas" required class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none transition-colors" placeholder="Contoh: A / B / C">
         </div>
-
-        <!-- GPS Info -->
         <div id="gps-info" class="hidden bg-green-50 border-2 border-green-200 rounded-lg p-4">
           <p class="text-sm font-semibold text-green-800 mb-2">✓ Lokasi GPS Berhasil Diambil</p>
           <p class="text-xs text-green-600">Latitude: <span id="lat-display">-</span></p>
           <p class="text-xs text-green-600">Longitude: <span id="lng-display">-</span></p>
         </div>
-
-        <!-- Buttons -->
         <div class="flex flex-col sm:flex-row gap-4">
           <button type="button" id="get-location-btn" class="flex-1 btn-primary bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
             <span id="location-text">📍 Ambil Lokasi GPS</span>
@@ -67,16 +62,14 @@
           </button>
         </div>
       </form>
-
       <div id="status-message" class="hidden mt-6"></div>
     </div>
 
-    <!-- Riwayat Presensi -->
+    <!-- Dashboard Riwayat Presensi -->
     <div class="bg-white rounded-2xl card-shadow p-8">
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 class="text-2xl font-bold text-gray-800">📊 Riwayat Presensi</h2>
       </div>
-
       <div class="overflow-x-auto">
         <table class="w-full">
           <thead class="bg-gray-100">
@@ -84,14 +77,13 @@
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nama</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">NIM</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kelas</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Jam</th>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Koordinat GPS</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Latitude</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Longitude</th>
             </tr>
           </thead>
           <tbody id="presensi-table-body" class="bg-white divide-y divide-gray-200">
             <tr id="empty-state">
-              <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+              <td colspan="5" class="px-4 py-8 text-center text-gray-500">
                 <div class="flex flex-col items-center gap-2">
                   <span class="text-4xl">📭</span>
                   <p class="font-semibold">Belum ada data presensi</p>
@@ -103,23 +95,56 @@
         </table>
       </div>
     </div>
-
   </div>
 </div>
 
 <script>
 let currentLatitude = null;
 let currentLongitude = null;
-let allPresensiData = [];
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtTLh4qIXbtGd2AuSEQJuM7aUz4_1r6sSKxyqOvSI54R0KFHTSjXvoqY7Xn6nTu0z8/exec";
 
-// Replace dengan Web App ID-mu
-const SPREADSHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxtTLh4qIXbtGd2AuSEQJuM7aUz4_1r6sSKxyqOvSI54R0KFHTSjXvoqY7Xn6nTu0z8/exec";
+function showStatus(message, type) {
+  const statusDiv = document.getElementById('status-message');
+  statusDiv.className = `status-badge p-4 rounded-lg text-sm font-semibold ${
+      type==='success' ? 'bg-green-100 text-green-800 border-2 border-green-200' : 'bg-red-100 text-red-800 border-2 border-red-200'}`;
+  statusDiv.textContent = message;
+  statusDiv.classList.remove('hidden');
+  setTimeout(() => statusDiv.classList.add('hidden'), 4000);
+}
 
-// Ambil GPS
+// Fungsi loadPresensi untuk menampilkan tabel dari spreadsheet
+async function loadPresensi() {
+  const tbody = document.getElementById('presensi-table-body');
+  try {
+    const res = await fetch(WEB_APP_URL + "?action=get");
+    const data = await res.json();
+    tbody.innerHTML = '';
+    if (!data || data.length === 0) {
+      tbody.innerHTML = document.getElementById('empty-state').outerHTML;
+      return;
+    }
+    data.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.className = 'table-row';
+      tr.innerHTML = `
+        <td class="px-4 py-3 text-sm text-gray-900">${item.nama}</td>
+        <td class="px-4 py-3 text-sm text-gray-600">${item.nim}</td>
+        <td class="px-4 py-3 text-sm text-gray-600">${item.kelas}</td>
+        <td class="px-4 py-3 text-xs text-gray-500">${item.latitude}</td>
+        <td class="px-4 py-3 text-xs text-gray-500">${item.longitude}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-red-600 font-semibold">Gagal memuat riwayat presensi</td></tr>`;
+    console.error(err);
+  }
+}
+
+// Ambil lokasi GPS
 document.getElementById('get-location-btn').addEventListener('click', function() {
   const btn = this;
   const spinner = document.getElementById('location-spinner');
-
   btn.disabled = true;
   spinner.classList.remove('hidden');
 
@@ -130,134 +155,64 @@ document.getElementById('get-location-btn').addEventListener('click', function()
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(function(position) {
-    currentLatitude = position.coords.latitude.toFixed(6);
-    currentLongitude = position.coords.longitude.toFixed(6);
-
+  navigator.geolocation.getCurrentPosition(pos => {
+    currentLatitude = pos.coords.latitude.toFixed(6);
+    currentLongitude = pos.coords.longitude.toFixed(6);
     document.getElementById('lat-display').textContent = currentLatitude;
     document.getElementById('lng-display').textContent = currentLongitude;
     document.getElementById('gps-info').classList.remove('hidden');
     document.getElementById('submit-btn').disabled = false;
-
     showStatus('Lokasi GPS berhasil diambil!', 'success');
     btn.disabled = false;
     spinner.classList.add('hidden');
-  }, function(error) {
-    showStatus('Gagal mengambil lokasi GPS', 'error');
+  }, err => {
+    let msg = 'Gagal mengambil lokasi GPS';
+    if (err.code===1) msg='Akses lokasi ditolak.';
+    if (err.code===2) msg='Lokasi tidak tersedia';
+    if (err.code===3) msg='Timeout';
+    showStatus(msg,'error');
     btn.disabled = false;
     spinner.classList.add('hidden');
   });
 });
 
-// Submit Presensi
-document.getElementById('presensi-form').addEventListener('submit', async function(e){
+// Submit presensi
+document.getElementById('presensi-form').addEventListener('submit', async function(e) {
   e.preventDefault();
-
   const nama = document.getElementById('nama').value.trim();
   const nim = document.getElementById('nim').value.trim();
   const kelas = document.getElementById('kelas').value.trim();
-
-  if(!nama || !nim || !kelas) {
-    showStatus('Lengkapi semua field sebelum submit', 'error');
-    return;
-  }
-  if(!currentLatitude || !currentLongitude) {
-    showStatus('Harap ambil lokasi GPS terlebih dahulu', 'error');
-    return;
-  }
-
-  const now = new Date();
-  const presensiData = {
-    nama, nim, kelas,
-    tanggal: now.toLocaleDateString('id-ID'),
-    jam: now.toLocaleTimeString('id-ID'),
-    latitude: currentLatitude,
-    longitude: currentLongitude
-  };
+  if (!nama || !nim || !kelas) { showStatus('Lengkapi semua field', 'error'); return; }
+  if (!currentLatitude || !currentLongitude) { showStatus('Ambil GPS dulu', 'error'); return; }
 
   const submitBtn = document.getElementById('submit-btn');
   const submitSpinner = document.getElementById('submit-spinner');
-  submitBtn.disabled = true;
-  submitSpinner.classList.remove('hidden');
+  submitBtn.disabled = true; submitSpinner.classList.remove('hidden');
 
   try {
-    const url = SPREADSHEET_WEB_APP_URL + `?nama=${encodeURIComponent(nama)}&nim=${encodeURIComponent(nim)}&kelas=${encodeURIComponent(kelas)}&latitude=${currentLatitude}&longitude=${currentLongitude}`;
-    const res = await fetch(url, { method: 'GET' });
+    const presensiData = { nama, nim, kelas, latitude: currentLatitude, longitude: currentLongitude };
+    const res = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify(presensiData) });
     const json = await res.json();
-    if(json.status === 'success'){
-      showStatus('Presensi berhasil disimpan!', 'success');
+    if (json.status==='success') {
+      showStatus('Presensi berhasil disimpan!','success');
       this.reset();
       document.getElementById('gps-info').classList.add('hidden');
-      currentLatitude = null;
-      currentLongitude = null;
+      currentLatitude = currentLongitude = null;
       await loadPresensi();
     } else {
-      showStatus('Gagal menyimpan presensi', 'error');
+      showStatus(json.message || 'Gagal menyimpan presensi','error');
     }
-  } catch(err){
+  } catch(err) {
     console.error(err);
-    showStatus('Error saat menyimpan presensi', 'error');
-  } finally{
+    showStatus('Error saat menyimpan presensi','error');
+  } finally {
     submitBtn.disabled = false;
     submitSpinner.classList.add('hidden');
   }
 });
 
-// Load Riwayat Presensi dari Spreadsheet
-async function loadPresensi() {
-  try {
-    const res = await fetch(SPREADSHEET_WEB_APP_URL);
-    const data = await res.json();
-    allPresensiData = data;
-    renderTable(data);
-  } catch(err){
-    console.error(err);
-    showStatus('Gagal memuat riwayat presensi', 'error');
-  }
-}
-
-function renderTable(data){
-  const tbody = document.getElementById('presensi-table-body');
-  const emptyState = document.getElementById('empty-state');
-
-  tbody.querySelectorAll('tr.table-row').forEach(row=>row.remove());
-
-  if(data.length===0){
-    emptyState.classList.remove('hidden');
-    return;
-  }
-
-  emptyState.classList.add('hidden');
-
-  data.forEach(item=>{
-    const tr = document.createElement('tr');
-    tr.className='table-row';
-    tr.innerHTML=`
-      <td class="px-4 py-3 text-sm text-gray-900">${item.nama}</td>
-      <td class="px-4 py-3 text-sm text-gray-600">${item.nim}</td>
-      <td class="px-4 py-3 text-sm text-gray-600">${item.kelas}</td>
-      <td class="px-4 py-3 text-sm text-gray-600">${item.tanggal}</td>
-      <td class="px-4 py-3 text-sm text-gray-600">${item.jam}</td>
-      <td class="px-4 py-3 text-xs text-gray-500">${item.latitude}, ${item.longitude}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// Status Message
-function showStatus(message, type){
-  const statusDiv = document.getElementById('status-message');
-  statusDiv.className=`status-badge p-4 rounded-lg text-sm font-semibold ${
-    type==='success' ? 'bg-green-100 text-green-800 border-2 border-green-200' : 'bg-red-100 text-red-800 border-2 border-red-200'
-  }`;
-  statusDiv.textContent=message;
-  statusDiv.classList.remove('hidden');
-  setTimeout(()=>{statusDiv.classList.add('hidden');},4000);
-}
-
-// Load data saat halaman load
+// Load tabel saat halaman ready
 window.addEventListener('DOMContentLoaded', loadPresensi);
-
 </script>
 </body>
 </html>
